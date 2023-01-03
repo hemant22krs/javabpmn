@@ -1,8 +1,11 @@
 Event Registration workflow using Spring Boot and Flowable.
 
 Project Setup Steps-
+
   (1)CheckOut project
+  
   (2)Create database schema
+  
   (3)Run Project
   
   
