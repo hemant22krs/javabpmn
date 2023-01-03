@@ -2,8 +2,10 @@ Event Registration workflow using Spring Boot and Flowable.
 
 Project Setup Steps-
 
-  (1) CheckOut project
+  (1) CheckOut project 
+  
   (2) Create database schema
+  
   (3) Run Project
   
   
@@ -30,9 +32,12 @@ Project Feature -
    Technology-
    
    Flowable used for workflow management.
+   
    JPA and MySql used for data persistence.
+   
    Spring Security used for restricted access to different group operation. For Authentication Http Basic Authentication used while for 
    Authorization method level  authorization used based on operation authority. Flowable IDM used for Authentication and Authorization.
+   
    
    
    
