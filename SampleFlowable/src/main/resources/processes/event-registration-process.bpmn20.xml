@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+        xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:flowable="http://flowable.org/bpmn"
+        targetNamespace="Examples">
+ 
+    <process id="eventRegistrationProcess" name="The Event Registration Process">
+        <startEvent id="theStart" />
+        <sequenceFlow id="flow1" sourceRef="theStart" targetRef="adminApproveTask"/>
+         <userTask id="adminApproveTask" name="Approve Organisazer" flowable:candidateGroups="EventAdmin" />
+         <sequenceFlow id="flow2" sourceRef="adminApproveTask" targetRef="regisEventCreationTask"/>         
+         <userTask id="regisEventCreationTask" name="Create Event" flowable:assignee="${organiser}"/>
+        <sequenceFlow id="flow3" sourceRef="regisEventCreationTask" targetRef="participantRegistrationTask" />
+        <userTask id="participantRegistrationTask" name="Register Participant" flowable:assignee="${participant}" />
+        <sequenceFlow id="flow4" sourceRef="participantRegistrationTask" targetRef="participantPaymentDecision"/>
+        <exclusiveGateway id="participantPaymentDecision"/>
+        <sequenceFlow id = "flow5" sourceRef="participantPaymentDecision" targetRef="makePaymentTask">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[
+          ${paymentRequired}
+        ]]>
+            </conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow6" sourceRef="participantPaymentDecision" targetRef="sendQRCodeTask">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[
+          ${!paymentRequired}
+        ]]>
+            </conditionExpression>
+        </sequenceFlow>    
+ <userTask id="makePaymentTask" name="Payment Participant" flowable:assignee="${participant}" />
+ <sequenceFlow id="flow7" sourceRef="makePaymentTask" targetRef="uploadPaymentProofTask"/>
+ <serviceTask id="uploadPaymentProofTask" name="Upload Proof" flowable:class="com.hemant.flowable.handler.PayProofuploadHandler" flowable:expression="${eventRegistrationId}" />
+ <sequenceFlow id="flow8" sourceRef="uploadPaymentProofTask" targetRef="validatePaymentTask" />
+ <userTask id="validatePaymentTask" name="Validate Payment" flowable:assignee="${organiser}"/>
+ 
+ <sequenceFlow  id="flow9" sourceRef="validatePaymentTask" targetRef="validatePaymentDecision" />
+          <exclusiveGateway id="validatePaymentDecision"/>
+          <sequenceFlow id="flow10" sourceRef="validatePaymentDecision" targetRef="VerifyPaymentTask">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[
+          ${paymentValidated}
+        ]]>
+            </conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow11" sourceRef="validatePaymentDecision" targetRef="SendInvalidPaymentEmailTask">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[
+          ${!paymentValidated}
+        ]]>
+            </conditionExpression>
+        </sequenceFlow>
+ <userTask id="VerifyPaymentTask" name="validate payment" flowable:assignee="${organiser}"/>
+ <sequenceFlow id="flow12" sourceRef="VerifyPaymentTask" targetRef="sendQRCodeTask"/>
+ <serviceTask id="sendQRCodeTask" name="SendR Code" flowable:class="com.hemant.flowable.handler.SendQRCodeHandler" >
+	<extensionElements>
+	<flowable:field name="username">
+	<flowable:expression>${username}</flowable:expression>
+	</flowable:field>
+	<flowable:field name="eventname">
+	<flowable:expression>${eventname}</flowable:expression>
+	</flowable:field>
+	<flowable:field name="email">
+	<flowable:expression>${email}</flowable:expression>
+	</flowable:field>
+	<flowable:field name="barcode">
+	<flowable:expression>${barcode}</flowable:expression>
+	</flowable:field>
+	</extensionElements> 
+</serviceTask>
+ <sequenceFlow id="flow13" sourceRef="sendQRCodeTask" targetRef="acceptQRCodeTask"/>
+ <serviceTask id="SendInvalidPaymentEmailTask" name="Send invallid Email" flowable:class="com.hemant.flowable.handler.FailedPaymentHandler" />
+ <userTask id="acceptQRCodeTask" name="accept QRCode" flowable:assignee="${participant}"/>
+ <sequenceFlow id="flow14" sourceRef="acceptQRCodeTask" targetRef="theEnd"/>
+ <sequenceFlow id="flow15" sourceRef="SendInvalidPaymentEmailTask" targetRef="theEnd"/>
+ <endEvent id="theEnd" />
+ </process>
+</definitions>
